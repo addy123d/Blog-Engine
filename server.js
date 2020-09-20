@@ -5,7 +5,7 @@ const host = "127.0.0.1";
 // Express Dependency - initialise
 const express = require("express");
 const bodyParser = require("body-parser");
-const viewEngine = require("view-engine");
+const session = require("express-session");
 
 var app = express();
 
@@ -15,31 +15,57 @@ app.use(bodyParser.urlencoded({
     extended: false
 }));
 
+// SESSION CONFIGURATION
+const sess = {
+    name: "User",
+    resave: false,
+    saveUninitialized: true,
+    secret: "mySecret",
+    cookie: {}
+}
+
+if (app.get('env') === "product ion") {
+    sess.cookie.secure = false;
+    sess.cookie.maxAge = 60 * 60;
+    sess.cookie.sameSite = true;
+}
+app.use(session(sess));
+
 app.set('view engine', 'ejs');
 
+
+// Middleware
+const redirectLogin = (request, response, next) => {
+    if (!request.session.Email) {
+        response.redirect("/register");
+    } else
+        next();
+}
+
+const redirectHome = (request, response, next) => {
+    if (request.session.Email) {
+        response.redirect("/home")
+    } else
+        next();
+}
+
 // Create Users Array - We will store users data in this array
-const registeredUsers = [];
+const registeredUsers = [{
+    email: "admin@gmail.com",
+    password: "admin"
+}];
 
 
 // Basic Page
-app.use("/register", express.static(__dirname + "/public"));
+app.use("/register", redirectHome, express.static(__dirname + "/public"));
 
 
 
 // CREATION of  different paths/pages
 // Structure is http://host:port/path - GET request - response - response.send("<h1>Hello this is our blog engine !</h1>");
-app.get("/home", (request, response) => {
+app.get("/home", redirectLogin, (request, response) => {
     response.send("<h1>Hello this is our blog engine !</h1>");
 })
-
-//WE WILL REQUEST FORM PAGE WITH ROUTE
-// app.get("/register", (request, response) => {
-//     response.send(`<form action="/registerDetails" method="POST">
-//                     <input type="text" name="username" placeholder="Choose your username">
-//                     <input type="password" name="password" placeholder="Choose your password">
-//                     <button>Submit</button>
-//                     </form>`)
-// })
 
 //GET Registration Form Details
 // Purpose - To store registered Users with email and passwords
@@ -58,7 +84,11 @@ app.post("/registerDetails", (request, response) => {
 
     registeredUsers.push(user);
 
-    console.log(registeredUsers);
+    // Storing Cookie onto the browser
+    request.session.Email = request.body.email;
+    request.session.Password = request.body.password;
+    console.log(request.session);
+
     response.status(200).json({
         "success": "Registration successful.. !"
     })
@@ -66,12 +96,7 @@ app.post("/registerDetails", (request, response) => {
 
 
 // Login path - /login
-app.get("/login", (request, response) => {
-    // response.send(`<form action="/loginDetails" method="POST">
-    //                 <input type="text" name="email" placeholder="email">
-    //                 <input type="password" name="password" placeholder="password">
-    //                 <button>Submit</button>
-    //                 </form>`)
+app.get("/login", redirectHome, (request, response) => {
     response.render("login");
 })
 
@@ -81,27 +106,42 @@ app.post("/loginDetails", (request, response) => {
     console.log("Username :", request.body.email);
     console.log("Password :", request.body.password);
 
-    console.log(registeredUsers)
+    console.log(registeredUsers);
 
     // Logic behind login
     // Collect UserIndex (if exists)
     const userIndex = registeredUsers.findIndex(user => user.email === request.body.email)
     console.log(userIndex);
-
     //For non registered users !
     if (userIndex === -1) {
         response.json({
             "message": "You are not registered !"
         })
+    } else {
+
+        // registeredUsers[userIndex].password is password stored in array
+        // request.body.password is password coming from your form
+        // Admin Section
+        if (registeredUsers[userIndex].email === "admin@gmail.com" && request.body.password === "admin")
+            response.status(200).json({
+                "success": "You are in the admin section"
+            })
+        else {
+            if (registeredUsers[userIndex].password === request.body.password && registeredUsers[userIndex].email === request.body.email) {
+                // Storing Cookie onto the browser
+                request.session.Email = request.body.email;
+                request.session.Password = request.body.password;
+                console.log(request.session);
+                response.status(200).json({
+                    "success": "Logged In !"
+                })
+            } else
+                response.status(400).json({
+                    "error": "Password Not matched !"
+                })
+        }
     }
 
-
-
-
-    // For those who successfully logged In !
-    response.status(200).json({
-        "success": "Logged In !"
-    })
 
 })
 
