@@ -55,6 +55,8 @@ const registeredUsers = [{
     password: "admin"
 }];
 
+const allBlogs = [];
+
 
 // Basic Page
 app.use("/register", redirectHome, express.static(__dirname + "/public"));
@@ -82,13 +84,18 @@ app.post("/registerDetails", (request, response) => {
     user.email = request.body.email;
     user.password = request.body.password;
 
+    // For blog posting purpose we have created this array
+    user.titles = [];
+    user.urls = [];
+    user.texts = [];
+
     registeredUsers.push(user);
 
     // Storing Cookie onto the browser
     request.session.Email = request.body.email;
     request.session.Password = request.body.password;
     console.log(request.session);
-
+    console.log(registeredUsers);
     response.status(200).json({
         "success": "Registration successful.. !"
     })
@@ -131,6 +138,8 @@ app.post("/loginDetails", (request, response) => {
                 // Storing Cookie onto the browser
                 request.session.Email = request.body.email;
                 request.session.Password = request.body.password;
+
+
                 console.log(request.session);
                 response.status(200).json({
                     "success": "Logged In !"
@@ -145,17 +154,67 @@ app.post("/loginDetails", (request, response) => {
 
 })
 
+// Get Blog form - We need blog title , one picture, blog text
+app.get("/blogForm", redirectLogin, (request, response) => {
+    response.render("blog");
+
+})
+
+// Get blogForm details
+app.post("/blogUpload", (request, response) => {
+    console.log(request.body);
+
+    const blogTitle = request.body.title;
+    const imageUrl = request.body.imgUrl;
+    const blogText = request.body.blogText;
 
 
-// Form Creation - Entries will be sent to server 
-// BODYPARSER
+    const email = request.session.Email;
+    console.log(email);
+
+    // Get specific User from registeredUsers array
+    const userIndex = registeredUsers.findIndex((user) => user.email === email); //userIndex will be the location of the user in the array
+    console.log(userIndex);
+
+
+    registeredUsers[userIndex].titles.push(blogTitle);
+    registeredUsers[userIndex].urls.push(imageUrl);
+    registeredUsers[userIndex].texts.push(blogText);
+
+
+    const specificBlog = {};
+
+    specificBlog.email = email;
+    specificBlog.titles = [];
+    specificBlog.titles.push(blogTitle);
+    specificBlog.urls = [];
+    specificBlog.urls.push(imageUrl);
+    specificBlog.texts = [];
+    specificBlog.texts.push(blogText);
+
+
+    allBlogs.push(specificBlog);
+    // user.titles = [];
+    // user.urls = [];
+    // user.texts = [];
+    console.log("Registered Users Array :", registeredUsers);
+
+    console.log("Blogs Array :", allBlogs);
+
+})
 
 
 // Listening for port and host together !
 app.listen(port, host, () => console.log(`Server is running...`));
 
 
-
+// User{
+//     email : xya,
+//     password : 123
+//     blogTitle : ["what is internet" , "what is social networking?"],
+//     blogUrls : ["xyz.jpg","zxc.png"],
+//     blogtext : ["qweertt","jcnjjcnjnsjcn"]
+// }
 
 
 
