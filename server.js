@@ -50,10 +50,7 @@ const redirectHome = (request, response, next) => {
 }
 
 // Create Users Array - We will store users data in this array
-const registeredUsers = [{
-    email: "admin@gmail.com",
-    password: "admin"
-}];
+const registeredUsers = [];
 
 const allBlogs = [];
 
@@ -65,8 +62,34 @@ app.use("/register", redirectHome, express.static(__dirname + "/public"));
 
 // CREATION of  different paths/pages
 // Structure is http://host:port/path - GET request - response - response.send("<h1>Hello this is our blog engine !</h1>");
-app.get("/home", redirectLogin, (request, response) => {
-    response.send("<h1>Hello this is our blog engine !</h1>");
+app.get("/users", (request, response) => {
+    console.log(registeredUsers);
+    response.render("users", {
+        users: registeredUsers
+    });
+})
+
+app.get("/blogs/:email", redirectLogin, (request, response) => {
+    const email = request.params.email;
+    console.log(email);
+
+
+    //get Index of user from allBlogs Array
+    const blogIndex = allBlogs.findIndex(user => user.email === email);
+
+    if (allBlogs[blogIndex].titles.length === 0) { //Checking whether it contains blogs or not !
+        response.render("blogCollection", {
+            status: 0
+        })
+    } else {
+        response.render("blogCollection", {
+            status: 1,
+            emails: allBlogs[blogIndex].email,
+            titles: allBlogs[blogIndex].titles,
+            urls: allBlogs[blogIndex].urls
+        })
+    }
+
 })
 
 //GET Registration Form Details
@@ -90,6 +113,20 @@ app.post("/registerDetails", (request, response) => {
     user.texts = [];
 
     registeredUsers.push(user);
+
+
+    // For allBlogs array
+    const blog = {};
+    blog.email = request.body.email;
+
+    // For Blogs Collection
+    blog.titles = [];
+    blog.urls = [];
+    blog.texts = [];
+
+    allBlogs.push(blog);
+    console.log("Blogs : ", allBlogs);
+
 
     // Storing Cookie onto the browser
     request.session.Email = request.body.email;
@@ -172,36 +209,66 @@ app.post("/blogUpload", (request, response) => {
     const email = request.session.Email;
     console.log(email);
 
+
+    // We have to store blog details in two arrays - 1. registeredUsers 2. allBlogs
+
     // Get specific User from registeredUsers array
-    const userIndex = registeredUsers.findIndex((user) => user.email === email); //userIndex will be the location of the user in the array
-    console.log(userIndex);
+    const registeredUser_index = registeredUsers.findIndex((user) => user.email === email); //userIndex will be the location of the user in the array
 
 
-    registeredUsers[userIndex].titles.push(blogTitle);
-    registeredUsers[userIndex].urls.push(imageUrl);
-    registeredUsers[userIndex].texts.push(blogText);
+    // Storing Details of Blogs in registeredUsers Array
+    registeredUsers[registeredUser_index].titles.push(blogTitle);
+    registeredUsers[registeredUser_index].urls.push(imageUrl);
+    registeredUsers[registeredUser_index].texts.push(blogText);
 
 
-    const specificBlog = {};
+    // Get specific User from allBlogs array
+    const allBlog_index = allBlogs.findIndex((user) => user.email === email); //userIndex will be the location of the user in the array
 
-    specificBlog.email = email;
-    specificBlog.titles = [];
-    specificBlog.titles.push(blogTitle);
-    specificBlog.urls = [];
-    specificBlog.urls.push(imageUrl);
-    specificBlog.texts = [];
-    specificBlog.texts.push(blogText);
+    // Storing Details of Blogs in allBlogs Array
+    allBlogs[allBlog_index].titles.push(blogTitle);
+    allBlogs[allBlog_index].urls.push(imageUrl);
+    allBlogs[allBlog_index].texts.push(blogText);
 
 
-    allBlogs.push(specificBlog);
-    // user.titles = [];
-    // user.urls = [];
-    // user.texts = [];
+
     console.log("Registered Users Array :", registeredUsers);
 
     console.log("Blogs Array :", allBlogs);
 
 })
+
+
+// Deleting logic for practice approach !
+
+// Delete a user from registered Users Array
+// app.get("/deleteUser", (request, response) => {
+//     response.send(`<form action="/delete" method="POST">
+//                     <input type="email" name="email" placeholder="Email">
+//                     <input type="submit" value="Submit">
+//                     </form>`)
+// })
+
+// app.post("/delete", (request, response) => {
+//     const email = request.body.email;
+
+//     // Get Index
+//     const userIndex = registeredUsers.findIndex(user => user.email === email);
+
+//     if (userIndex < 0)
+//         response.json({
+//             "error": "User not found !"
+//         })
+//     else {
+
+//         // Deleting user from registeredUsers array !
+//         registeredUsers.pop(registeredUsers[userIndex]);
+//         console.log(registeredUsers);
+//         response.status(200).json({
+//             "message": "User Deleted Successfully !"
+//         })
+//     }
+// })
 
 
 // Listening for port and host together !
