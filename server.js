@@ -6,6 +6,8 @@ const host = "127.0.0.1";
 const express = require("express");
 const bodyParser = require("body-parser");
 const session = require("express-session");
+const Mongo = require("mongoose");
+const key = require("./setup/config");
 
 var app = express();
 
@@ -53,6 +55,22 @@ const redirectHome = (request, response, next) => {
 const registeredUsers = [];
 
 const allBlogs = [];
+
+
+// Database Connection
+// Mongo.coonect is a promise. Therefore there will be two possiblities 1. Fulfilled or 2.Failed. So fulfilled one goes into then block and failure one goes to catch block.
+// then().catch() statements are used to prevent server crash incase of failed promise.
+Mongo.connect(key.url, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+    })
+    .then(() => {
+        console.log("Database connected successfully !");
+    })
+    .catch((error) => {
+        console.log("Something went wrong :", error);
+    });
+
 
 
 // Basic Page
