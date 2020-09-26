@@ -44,7 +44,7 @@ const redirectLogin = (request, response, next) => {
 
 const redirectHome = (request, response, next) => {
     if (request.session.Email) {
-        response.redirect("/home")
+        response.redirect("/users")
     } else
         next();
 }
@@ -65,6 +65,7 @@ app.use("/register", redirectHome, express.static(__dirname + "/public"));
 app.get("/users", (request, response) => {
     console.log(registeredUsers);
     response.render("users", {
+        status: "",
         users: registeredUsers
     });
 })
@@ -90,6 +91,50 @@ app.get("/blogs/:email", redirectLogin, (request, response) => {
         })
     }
 
+})
+
+app.get("/blogs/fullblog/:title", redirectLogin, (request, response) => {
+    const title = request.params.title;
+    const email = request.session.Email;
+
+    // Collect index of a blog in allBlogs array with the help of email
+    const blogIndex = allBlogs.findIndex((blog) => blog.email === email);
+
+    console.log(blogIndex);
+    console.log(allBlogs[blogIndex]);
+    // {
+    //     email: 'ml@gmail.com',
+    //     titles: [ 'Internet','Facebook' ],
+    //     urls: [ 'https://www.netobjex.com/wp-content/uploads/2019/01/1.jpg','xyz.jpeg' ],
+    //     texts: [ 'dkmskndjnsdnjnsjn','sbdhsbdajhsd' ]
+    //   }
+
+    let i;
+    for (i = 0; i <= allBlogs[blogIndex].titles.length; i++) {
+        if (allBlogs[blogIndex].titles[i] === title) {
+            break;
+        } else
+            continue;
+    }
+
+    // console.log("Position of our blog is :", i);
+    const Index = i; //This is our Blog title's index
+
+    console.log(allBlogs[blogIndex].titles[Index]);
+    console.log(allBlogs[blogIndex].urls[Index])
+    console.log(allBlogs[blogIndex].texts[Index])
+
+    response.render("blogs", {
+        user: email,
+        title: allBlogs[blogIndex].titles[Index],
+        url: allBlogs[blogIndex].urls[Index],
+        text: allBlogs[blogIndex].texts[Index]
+    })
+
+
+    // response.render("blogs", {
+    //     user: allBlogs[blogIndex].email
+    // });
 })
 
 //GET Registration Form Details
@@ -133,9 +178,13 @@ app.post("/registerDetails", (request, response) => {
     request.session.Password = request.body.password;
     console.log(request.session);
     console.log(registeredUsers);
-    response.status(200).json({
-        "success": "Registration successful.. !"
-    })
+    response.status(200).render("users", {
+        status: "Logged",
+        users: registeredUsers
+    });
+    // response.status(200).json({
+    //     "success": "Registration successful.. !"
+    // })
 })
 
 
@@ -178,13 +227,18 @@ app.post("/loginDetails", (request, response) => {
 
 
                 console.log(request.session);
-                response.status(200).json({
-                    "success": "Logged In !"
-                })
+                response.status(200).render("users", {
+                    status: "Logged",
+                    users: registeredUsers
+                });
+                // response.status(200).json({
+                //     "success": "Logged In !"
+                // })
             } else
-                response.status(400).json({
-                    "error": "Password Not matched !"
-                })
+                response.status(200).send("<h1>Password not matched !</h1>");
+            // response.status(400).json({
+            //     "error": "Password Not matched !"
+            // })
         }
     }
 
@@ -193,7 +247,7 @@ app.post("/loginDetails", (request, response) => {
 
 // Get Blog form - We need blog title , one picture, blog text
 app.get("/blogForm", redirectLogin, (request, response) => {
-    response.render("blog");
+    response.render("uploadblog");
 
 })
 
@@ -236,7 +290,10 @@ app.post("/blogUpload", (request, response) => {
 
     console.log("Blogs Array :", allBlogs);
 
+    response.status(200).redirect("/users");
+
 })
+
 
 
 // Deleting logic for practice approach !
@@ -269,6 +326,17 @@ app.post("/blogUpload", (request, response) => {
 //         })
 //     }
 // })
+
+// Logout Path
+app.get("/logout", (request, response) => {
+    request.session.destroy((error) => {
+        if (error) {
+            console.log("Error :", error);
+            response.status(200).redirect("/users");
+        } else
+            response.status(200).redirect("/register");
+    })
+})
 
 
 // Listening for port and host together !

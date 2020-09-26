@@ -26,25 +26,35 @@
             <ul class="navbar-nav mr-auto">
 
             </ul>
-            <form class="form-inline my-2 my-lg-0">
-                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-                <button class="btn btn-outline-secondary my-2 my-sm-0" type="submit">Search</button>
+
+            <%if(status === "Logged"){%>
+            <form class="form-inline my-2 mx-2 my-lg-0" action="/logout" method="GET">
+                <button class="btn btn-light my-2 my-sm-0" type="submit">LOGOUT</button>
+            </form>
+            <%}else{%>
+            <form class="form-inline my-2 my-lg-0" action="/login" method="GET">
+                <button class="btn btn-light my-2 my-sm-0" type="submit">LOGIN</button>
+            </form>
+            <%}%>
+            <form class="form-inline my-2 mx-2 my-lg-0" action="/blogForm" method="GET">
+                <button class="btn btn-light my-2 my-sm-0" type="submit">UPLOAD</button>
             </form>
         </div>
     </nav>
 
     <%for(var i=0; i<= users.length-1; i++){%>
-    <div class="card" style="width: 18rem; margin: 5%;display: inline-block;">
-        <img class="card-img-top" src="https://d32ogoqmya1dw8.cloudfront.net/images/serc/empty_user_icon_256.v2.png"
-            alt="Card image cap">
-        <div class="card-body">
-            <p style="text-align: center;font-weight: bolder;" class="card-text"><%=users[i].email%></p>
-        </div>
-        <div style="display: flex;justify-content: center; margin: 2%;">
-            <a href="/blogs/<%=users[i].email%>"><button type="button" class="btn btn-dark">Blogs</button></a>
-        </div>
-    </div>
-    <%}%>
+            <div class="card" style="width: 18rem; margin: 5%;display: inline-block;">
+                <img class="card-img-top"
+                    src="https://d32ogoqmya1dw8.cloudfront.net/images/serc/empty_user_icon_256.v2.png"
+                    alt="Card image cap">
+                <div class="card-body">
+                    <p style="text-align: center;font-weight: bolder;" class="card-text"><%=users[i].email%></p>
+                </div>
+                <div style="display: flex;justify-content: center; margin: 2%;">
+                    <a href="/blogs/<%=users[i].email%>"><button type="button" class="btn btn-dark">Blogs</button></a>
+                </div>
+            </div>
+            <%}%>
 
 
     <!-- a tag ye pata hai ? q use krte hai ? Usse ky hota hai ? -->
