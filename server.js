@@ -8,6 +8,10 @@ const bodyParser = require("body-parser");
 const session = require("express-session");
 const Mongo = require("mongoose");
 const key = require("./setup/config");
+const bcrypt = require("bcrypt");
+
+// Tables
+const User = require("./tables/Register");
 
 var app = express();
 
@@ -51,41 +55,64 @@ const redirectHome = (request, response, next) => {
         next();
 }
 
-// Create Users Array - We will store users data in this array
-const registeredUsers = [];
+// Create Users👥 Array - We will store users data in this array (When you are not using database)
+// const registeredUsers = [];
 
-const allBlogs = [];
+// const allBlogs = [];
 
 
 // Database Connection
-// Mongo.coonect is a promise. Therefore there will be two possiblities 1. Fulfilled or 2.Failed. So fulfilled one goes into then block and failure one goes to catch block.
+// Mongo.connect is a promise. Therefore there will be two possiblities 1. Fulfilled or 2.Failed. So fulfilled one goes into then block and failure one goes to catch block.
 // then().catch() statements are used to prevent server crash incase of failed promise.
 Mongo.connect(key.url, {
         useNewUrlParser: true,
         useUnifiedTopology: true
     })
     .then(() => {
-        console.log("Database connected successfully !");
+        console.log("Database connected successfully🎉 !");
     })
     .catch((error) => {
-        console.log("Something went wrong :", error);
+        console.log("Something went wrong🤦‍♀️ :", error);
     });
 
 
 
 // Basic Page
 app.use("/register", redirectHome, express.static(__dirname + "/public"));
-
+app.get("/", (request, response) => {
+    response.status(301).redirect("/users");
+})
 
 
 // CREATION of  different paths/pages
 // Structure is http://host:port/path - GET request - response - response.send("<h1>Hello this is our blog engine !</h1>");
 app.get("/users", (request, response) => {
-    console.log(registeredUsers);
-    response.render("users", {
-        status: "",
-        users: registeredUsers
-    });
+
+    // BEFORE USING DATABASE :
+    // console.log(registeredUsers);
+    // response.render("users", {
+    //     status: "",
+    //     users: registeredUsers
+    // });
+
+    // AFTER USING DATABASE :
+    User.find()
+        .then((users) => {
+            console.log(users);
+            if (request.session.Email) {
+                response.render("users", {
+                    status: "Logged",
+                    users: users
+                });
+            } else
+                response.render("users", {
+                    status: "",
+                    users: users
+                });
+        })
+        .catch(err => console.log(err))
+
+
 })
 
 app.get("/blogs/:email", redirectLogin, (request, response) => {
@@ -93,21 +120,45 @@ app.get("/blogs/:email", redirectLogin, (request, response) => {
     console.log(email);
 
 
-    //get Index of user from allBlogs Array
-    const blogIndex = allBlogs.findIndex(user => user.email === email);
+    // BEFORE :
+    // //get Index of user from allBlogs Array
+    // const blogIndex = allBlogs.findIndex(user => user.email === email);
 
-    if (allBlogs[blogIndex].titles.length === 0) { //Checking whether it contains blogs or not !
-        response.render("blogCollection", {
-            status: 0
+    // if (allBlogs[blogIndex].titles.length === 0) { //Checking whether it contains blogs or not !
+    //     response.render("blogCollection", {
+    //         status: 0
+    //     })
+    // } else {
+    //     response.render("blogCollection", {
+    //         status: 1,
+    //         emails: allBlogs[blogIndex].email,
+    //         titles: allBlogs[blogIndex].titles,
+    //         urls: allBlogs[blogIndex].urls
+    //     })
+    // }
+
+
+    // AFTER :
+    User.findOne({
+            email: email
         })
-    } else {
-        response.render("blogCollection", {
-            status: 1,
-            emails: allBlogs[blogIndex].email,
-            titles: allBlogs[blogIndex].titles,
-            urls: allBlogs[blogIndex].urls
+        .then((user) => {
+            console.log(user);
+            if (user.titles.length === 0) { //Checking whether it contains blogs or not !
+                response.status(200).render("blogCollection", {
+                    status: 0
+                })
+            } else {
+                response.status(200).render("blogCollection", {
+                    status: 1,
+                    emails: user.email,
+                    titles: user.titles,
+                    urls: user.urls
+                })
+            }
         })
-    }
+        .catch(err => console.log(err))
+
 
 })
 
@@ -115,44 +166,78 @@ app.get("/blogs/fullblog/:title", redirectLogin, (request, response) => {
     const title = request.params.title;
     const email = request.session.Email;
 
-    // Collect index of a blog in allBlogs array with the help of email
-    const blogIndex = allBlogs.findIndex((blog) => blog.email === email);
+    // BEFORE :
+    // // Collect index of a blog in allBlogs array with the help of email
+    // const blogIndex = allBlogs.findIndex((blog) => blog.email === email);
 
-    console.log(blogIndex);
-    console.log(allBlogs[blogIndex]);
-    // {
-    //     email: 'ml@gmail.com',
-    //     titles: [ 'Internet','Facebook' ],
-    //     urls: [ 'https://www.netobjex.com/wp-content/uploads/2019/01/1.jpg','xyz.jpeg' ],
-    //     texts: [ 'dkmskndjnsdnjnsjn','sbdhsbdajhsd' ]
-    //   }
+    // console.log(blogIndex);
+    // console.log(allBlogs[blogIndex]);
+    // // {
+    // //     email: 'ml@gmail.com',
+    // //     titles: [ 'Internet','Facebook' ],
+    // //     urls: [ 'https://www.netobjex.com/wp-content/uploads/2019/01/1.jpg','xyz.jpeg' ],
+    // //     texts: [ 'dkmskndjnsdnjnsjn','sbdhsbdajhsd' ]
+    // //   }
 
-    let i;
-    for (i = 0; i <= allBlogs[blogIndex].titles.length; i++) {
-        if (allBlogs[blogIndex].titles[i] === title) {
-            break;
-        } else
-            continue;
-    }
+    // let i;
+    // for (i = 0; i <= allBlogs[blogIndex].titles.length; i++) {
+    //     if (allBlogs[blogIndex].titles[i] === title) {
+    //         break;
+    //     } else
+    //         continue;
+    // }
 
-    // console.log("Position of our blog is :", i);
-    const Index = i; //This is our Blog title's index
+    // // console.log("Position of our blog is :", i);
+    // const Index = i; //This is our Blog title's index
 
-    console.log(allBlogs[blogIndex].titles[Index]);
-    console.log(allBlogs[blogIndex].urls[Index])
-    console.log(allBlogs[blogIndex].texts[Index])
+    // console.log(allBlogs[blogIndex].titles[Index]);
+    // console.log(allBlogs[blogIndex].urls[Index])
+    // console.log(allBlogs[blogIndex].texts[Index])
 
-    response.render("blogs", {
-        user: email,
-        title: allBlogs[blogIndex].titles[Index],
-        url: allBlogs[blogIndex].urls[Index],
-        text: allBlogs[blogIndex].texts[Index]
-    })
+    // response.render("blogs", {
+    //     user: email,
+    //     title: allBlogs[blogIndex].titles[Index],
+    //     url: allBlogs[blogIndex].urls[Index],
+    //     text: allBlogs[blogIndex].texts[Index]
+    // })
 
 
     // response.render("blogs", {
     //     user: allBlogs[blogIndex].email
     // });
+
+    // AFTER :
+    User.findOne({
+            email: email
+        })
+        .then((user) => {
+            // console.log(user);
+            let i;
+            for (i = 0; i <= user.titles.length; i++) {
+                if (user.titles[i] === title) {
+                    console.log("We got our title");
+                    break;
+                } else
+                    continue;
+            }
+
+            // console.log("Position of our blog is :", i);
+            const Index = i; //This is our Blog title's index
+
+            console.log(user.titles[Index]);
+            console.log(user.urls[Index])
+            console.log(user.texts[Index])
+
+            response.status(200).render("blogs", {
+                user: email,
+                title: user.titles[Index],
+                url: user.urls[Index],
+                text: user.texts[Index]
+            })
+
+        })
+        .catch(err => console.log(err));
+
 })
 
 //GET Registration Form Details
@@ -169,40 +254,80 @@ app.post("/registerDetails", (request, response) => {
     // admin@gmail.com
     user.email = request.body.email;
     user.password = request.body.password;
+    user.profilepic = request.body.pic;
 
     // For blog posting purpose we have created this array
     user.titles = [];
     user.urls = [];
     user.texts = [];
 
-    registeredUsers.push(user);
+    // BEFORE :
+    // registeredUsers.push(user);
 
 
     // For allBlogs array
-    const blog = {};
-    blog.email = request.body.email;
+    // const blog = {};
+    // blog.email = request.body.email;
 
-    // For Blogs Collection
-    blog.titles = [];
-    blog.urls = [];
-    blog.texts = [];
+    // // For Blogs Collection
+    // blog.titles = [];
+    // blog.urls = [];
+    // blog.texts = [];
 
-    allBlogs.push(blog);
-    console.log("Blogs : ", allBlogs);
+    // allBlogs.push(blog);
+    // console.log("Blogs : ", allBlogs);
 
 
     // Storing Cookie onto the browser
-    request.session.Email = request.body.email;
-    request.session.Password = request.body.password;
-    console.log(request.session);
-    console.log(registeredUsers);
-    response.status(200).render("users", {
-        status: "Logged",
-        users: registeredUsers
-    });
+    // request.session.Email = request.body.email;
+    // request.session.Password = request.body.password;
+    // console.log(request.session);
+    // console.log(registeredUsers);
+    // response.status(200).render("users", {
+    //     status: "Logged",
+    //     users: registeredUsers
+    // });
     // response.status(200).json({
     //     "success": "Registration successful.. !"
     // })
+
+    // Upload User data to the database
+    // 1. table
+    // 2. email,password, titles,urls,texts
+
+
+    // AFTER :
+    User.findOne({
+            email: request.body.email
+        })
+        .then((person) => {
+            if (person) {
+                response.status(201).redirect("/register");
+                console.log("Email already registered🤷‍♂️ !");
+            } else {
+                bcrypt.genSalt(10, function (err, salt) {
+                    bcrypt.hash(user.password, salt, function (err, hash) {
+                        user.password = hash;
+                        new User(user).save()
+                            .then((user) => {
+                                console.log(user);
+                                console.log("User Registered🎉 !");
+                                // Storing Cookie onto the browser
+                                request.session.Email = user.email;
+                                request.session.Password = user.password;
+                                console.log(request.session);
+                                response.status(200).redirect("/users");
+                            })
+                            .catch(err => console.log(err))
+                    });
+                });
+
+
+            }
+
+        })
+        .catch(err => console.log("Failed😢 !"));
+
 })
 
 
@@ -217,49 +342,89 @@ app.post("/loginDetails", (request, response) => {
     console.log("Username :", request.body.email);
     console.log("Password :", request.body.password);
 
-    console.log(registeredUsers);
+    // BEFORE IMPLEMENTING :
+    // console.log(registeredUsers);
 
-    // Logic behind login
-    // Collect UserIndex (if exists)
-    const userIndex = registeredUsers.findIndex(user => user.email === request.body.email)
-    console.log(userIndex);
-    //For non registered users !
-    if (userIndex === -1) {
-        response.json({
-            "message": "You are not registered !"
+    // // Logic behind login
+    // // Collect UserIndex (if exists)
+    // const userIndex = registeredUsers.findIndex(user => user.email === request.body.email)
+    // console.log(userIndex);
+    // //For non registered users !
+    // if (userIndex === -1) {
+    //     response.json({
+    //         "message": "You are not registered !"
+    //     })
+    // } else {
+
+    //     // registeredUsers[userIndex].password is password stored in array
+    //     // request.body.password is password coming from your form
+    //     // Admin Section
+    //     if (registeredUsers[userIndex].email === "admin@gmail.com" && request.body.password === "admin")
+    //         response.status(200).json({
+    //             "success": "You are in the admin section"
+    //         })
+    //     else {
+    //         if (registeredUsers[userIndex].password === request.body.password && registeredUsers[userIndex].email === request.body.email) {
+    //             // Storing Cookie onto the browser
+    //             request.session.Email = request.body.email;
+    //             request.session.Password = request.body.password;
+
+
+    //             console.log(request.session);
+    //             response.status(200).render("users", {
+    //                 status: "Logged",
+    //                 users: registeredUsers
+    //             });
+    //             // response.status(200).json({
+    //             //     "success": "Logged In !"
+    //             // })
+    //         } else
+    //             response.status(200).send("<h1>Password not matched !</h1>");
+    //         // response.status(400).json({
+    //         //     "error": "Password Not matched !"
+    //         // })
+    //     }
+    // }
+
+    //AFTER IMPLEMENTING DATABASE
+    User.findOne({
+            email: request.body.email
         })
-    } else {
+        .then((person) => {
+            if (!person)
+                response.status(404).json({
+                    "emailerr": "You are not registered yet🤷‍♂️ !"
+                })
+            else {
 
-        // registeredUsers[userIndex].password is password stored in array
-        // request.body.password is password coming from your form
-        // Admin Section
-        if (registeredUsers[userIndex].email === "admin@gmail.com" && request.body.password === "admin")
-            response.status(200).json({
-                "success": "You are in the admin section"
-            })
-        else {
-            if (registeredUsers[userIndex].password === request.body.password && registeredUsers[userIndex].email === request.body.email) {
-                // Storing Cookie onto the browser
-                request.session.Email = request.body.email;
-                request.session.Password = request.body.password;
+                // BEFORE ENCRYPTION
+                // person.email is coming from database
+                // request.body.email is coming from frontend form
+                // if (person.email === request.body.email && person.password === request.body.password) {
+                //     // Storing Cookie onto the browser
+                //     request.session.Email = person.email;
+                //     request.session.Password = person.password;
+                //     console.log(request.session);
+                //     response.status(200).redirect("/users");
+                // } else
+                //     response.status(404).redirect("/register");
 
-
-                console.log(request.session);
-                response.status(200).render("users", {
-                    status: "Logged",
-                    users: registeredUsers
+                //AFTER ENCRYPTION
+                bcrypt.compare(request.body.password, person.password).then((res) => {
+                    // res === true
+                    if (res === true) {
+                        // Storing Cookie onto the browser
+                        request.session.Email = person.email;
+                        request.session.Password = person.password;
+                        console.log(request.session);
+                        response.status(200).redirect("/users");
+                    } else
+                        response.status(404).redirect("/register");
                 });
-                // response.status(200).json({
-                //     "success": "Logged In !"
-                // })
-            } else
-                response.status(200).send("<h1>Password not matched !</h1>");
-            // response.status(400).json({
-            //     "error": "Password Not matched !"
-            // })
-        }
-    }
 
+            }
+        })
+        .catch(err => console.log(err))
 
 })
 
@@ -281,34 +446,51 @@ app.post("/blogUpload", (request, response) => {
     const email = request.session.Email;
     console.log(email);
 
-
+    // BEFORE :
     // We have to store blog details in two arrays - 1. registeredUsers 2. allBlogs
 
-    // Get specific User from registeredUsers array
-    const registeredUser_index = registeredUsers.findIndex((user) => user.email === email); //userIndex will be the location of the user in the array
+    // // Get specific User from registeredUsers array
+    // const registeredUser_index = registeredUsers.findIndex((user) => user.email === email); //userIndex will be the location of the user in the array
 
 
-    // Storing Details of Blogs in registeredUsers Array
-    registeredUsers[registeredUser_index].titles.push(blogTitle);
-    registeredUsers[registeredUser_index].urls.push(imageUrl);
-    registeredUsers[registeredUser_index].texts.push(blogText);
+    // // Storing Details of Blogs in registeredUsers Array
+    // registeredUsers[registeredUser_index].titles.push(blogTitle);
+    // registeredUsers[registeredUser_index].urls.push(imageUrl);
+    // registeredUsers[registeredUser_index].texts.push(blogText);
 
 
-    // Get specific User from allBlogs array
-    const allBlog_index = allBlogs.findIndex((user) => user.email === email); //userIndex will be the location of the user in the array
+    // // Get specific User from allBlogs array
+    // const allBlog_index = allBlogs.findIndex((user) => user.email === email); //userIndex will be the location of the user in the array
 
-    // Storing Details of Blogs in allBlogs Array
-    allBlogs[allBlog_index].titles.push(blogTitle);
-    allBlogs[allBlog_index].urls.push(imageUrl);
-    allBlogs[allBlog_index].texts.push(blogText);
+    // // Storing Details of Blogs in allBlogs Array
+    // allBlogs[allBlog_index].titles.push(blogTitle);
+    // allBlogs[allBlog_index].urls.push(imageUrl);
+    // allBlogs[allBlog_index].texts.push(blogText);
 
 
 
-    console.log("Registered Users Array :", registeredUsers);
+    // console.log("Registered Users Array :", registeredUsers);
 
-    console.log("Blogs Array :", allBlogs);
+    // console.log("Blogs Array :", allBlogs);
 
-    response.status(200).redirect("/users");
+    // response.status(200).redirect("/users");
+
+    // AFTER :
+    User.findOneAndUpdate({
+            email: email
+        }, {
+            $push: {
+                titles: blogTitle,
+                urls: imageUrl,
+                texts: blogText
+            }
+        }, {
+            new: true
+        })
+        .then(() => {
+            console.log("Database Updated Successfully🎉 !")
+        })
+        .catch(err => console.log(err))
 
 })
 
@@ -358,7 +540,7 @@ app.get("/logout", (request, response) => {
 
 
 // Listening for port and host together !
-app.listen(port, host, () => console.log(`Server is running...`));
+app.listen(port, host, () => console.log(`Server is running...💻`));
 
 
 // User{
