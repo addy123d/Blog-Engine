@@ -17,6 +17,7 @@
         box-sizing: border-box;
     }
 
+
     body {
         display: flex;
         justify-content: center;
@@ -51,7 +52,8 @@
     }
 
     input[type="email"],
-    input[type="password"] {
+    input[type="password"],
+    input[type="url"] {
         padding: 1em 1em 1em 2.4em;
         border-radius: 5px;
         outline: none;
@@ -185,6 +187,7 @@
 </style>
 
 <body>
+
     <div class="container">
         <div class="form">
             <div class="heading">
@@ -203,6 +206,7 @@
 
                 <div class="password">
                     <input type="url" name="pic" placeholder="Upload Your Image" id="" required>
+                    <i class="fa fa-upload" aria-hidden="true"></i>
                 </div>
                 <div class="submitButton">
                     <button>Sign Up</button>

@@ -6,22 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans&family=Montserrat:wght@300&display=swap"
+        rel="stylesheet">
     <title>Blog</title>
 </head>
 <style>
     .back-btn {
         display: flex;
         justify-content: center;
+        margin: 3%;
     }
 
     .back-btn button {
+        padding: .7em 2em .7em 2em;
         text-transform: uppercase;
-        padding: .2em;
-        padding-left: .5em;
-        padding-right: .5em;
-        border: 1px solid #000000;
-        font-weight: bold;
-        font-size: 1.2rem;
+        font-family: "Josefin sans", cursive;
+        border-radius: 23px;
+        background: #ffffff;
+        box-shadow: 12px 12px 24px #d4d4d4,
+            -12px -12px 24px #ffffff;
         outline: none;
     }
 
@@ -46,7 +49,7 @@
                             class="w-20 h-20 rounded-full inline-flex items-center justify-center bg-gray-200 text-gray-400">
                             <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                                 stroke-width="2" class="w-10 h-10" viewBox="0 0 24 24">
-                                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
+                                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"><%=pic%></path>
                                 <circle cx="12" cy="7" r="4"></circle>
                             </svg>
                         </div>
@@ -62,11 +65,12 @@
                 </div>
             </div>
         </div>
-        <div class="back-btn">
-            <a href="/users"><button>Back</button></a>
-        </div>
 
     </section>
+    <div class="back-btn">
+        <a href="/users"><button>Back</button></a>
+    </div>
+
 </body>
 
 </html>

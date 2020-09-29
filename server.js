@@ -230,6 +230,7 @@ app.get("/blogs/fullblog/:title", redirectLogin, (request, response) => {
 
             response.status(200).render("blogs", {
                 user: email,
+                pic: user.profilepic,
                 title: user.titles[Index],
                 url: user.urls[Index],
                 text: user.texts[Index]
@@ -302,8 +303,9 @@ app.post("/registerDetails", (request, response) => {
         })
         .then((person) => {
             if (person) {
-                response.status(201).redirect("/register");
-                console.log("Email already registered🤷‍♂️ !");
+                response.status(201).render("register", {
+                    error: "Error"
+                })
             } else {
                 bcrypt.genSalt(10, function (err, salt) {
                     bcrypt.hash(user.password, salt, function (err, hash) {
@@ -333,7 +335,9 @@ app.post("/registerDetails", (request, response) => {
 
 // Login path - /login
 app.get("/login", redirectHome, (request, response) => {
-    response.render("login");
+    response.render("login", {
+        error: ""
+    });
 })
 
 
@@ -391,9 +395,10 @@ app.post("/loginDetails", (request, response) => {
             email: request.body.email
         })
         .then((person) => {
+            console.log(person);
             if (!person)
-                response.status(404).json({
-                    "emailerr": "You are not registered yet🤷‍♂️ !"
+                response.status(404).render("login", {
+                    error: "Error"
                 })
             else {
 
@@ -419,7 +424,9 @@ app.post("/loginDetails", (request, response) => {
                         console.log(request.session);
                         response.status(200).redirect("/users");
                     } else
-                        response.status(404).redirect("/register");
+                        response.status(404).render("login", {
+                            error: "passError"
+                        })
                 });
 
             }
@@ -489,11 +496,67 @@ app.post("/blogUpload", (request, response) => {
         })
         .then(() => {
             console.log("Database Updated Successfully🎉 !")
+            response.status(200).redirect("/users");
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            console.log(err);
+            response.status(200).render("uploadBlog", {
+                error: "Error"
+            })
+        })
 
 })
 
+// Delete a User
+
+app.get("/delete", redirectLogin, (request, response) => {
+    response.status(200).render("deleteUser", {
+        error: ''
+    })
+})
+
+app.post("/deleteUser", (request, response) => {
+    console.log(request.body);
+    const email = request.session.Email;
+    const password = request.body.password;
+
+
+    User.findOne({
+            email: email
+        })
+        .then((user) => {
+            if (!user)
+                response.status(200).render("deleteUser", {
+                    error: 'Error'
+                })
+            else {
+                // password is coming from form
+                // user.password is coming from database
+                bcrypt.compare(password, user.password).then((isCorrect) => {
+                    // res === true
+                    if (isCorrect === true) {
+                        User.findOneAndDelete({
+                                email: user.email
+                            })
+                            .then(() => {
+                                request.session.destroy((error) => {
+                                    if (error) {
+                                        console.log("Error :", error);
+                                        response.status(200).redirect("/users");
+                                    } else
+                                        response.status(200).redirect("/users");
+                                })
+                            })
+                            .catch(err => console.log(err));
+                    } else
+                        response.status(200).render("deleteUser", {
+                            error: 'passError'
+                        })
+                });
+            }
+        })
+        .catch(err => console.log(err));
+})
 
 
 // Deleting logic for practice approach !

@@ -8,7 +8,7 @@
         integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans&family=Montserrat:wght@300&display=swap"
         rel="stylesheet">
-    <title>Upload Blog</title>
+    <title>Register</title>
 </head>
 <style>
     * {
@@ -50,20 +50,15 @@
         left: 0;
     }
 
-    input[type="text"],
-    input[type="url"],
-    textarea {
+    input[type="email"],
+    input[type="password"],
+    input[type="url"] {
         padding: 1em 1em 1em 2.4em;
         border-radius: 5px;
         outline: none;
         background: #ffffff;
         border: 1.5px solid rgb(44, 44, 44);
         font-family: 'Josefin Sans', sans-serif;
-    }
-
-    textarea {
-        width: 100%;
-        height: 90px;
     }
 
     .email i,
@@ -174,12 +169,11 @@
         color: rgb(81, 81, 255);
     }
 
-    img {
-        display: none;
-        height: 180px;
-        width: 180px;
+    .errorTxt h2 {
+        font-size: 1.5rem;
+        font-family: 'Josefin Sans', sans-serif;
+        color: rgb(236, 57, 44);
     }
-
 
 
     @media all and (max-width: 574.6px) {
@@ -202,48 +196,39 @@
         <div class="form">
             <div class="heading">
                 <!-- <h2>Register <i class="fa fa-user-plus" aria-hidden="true"></i></h2> -->
-                <h2>Upload Blog</h2>
+                <h2>Register</h2>
             </div>
-            <form action="/blogUpload" method="POST">
+            <form action="/registerDetails" method="POST">
                 <div class="email">
-                    <input type="text" name="title" placeholder="Enter Blog Title" id="" autocomplete="off" required>
-                    <i class="fa fa-rss" aria-hidden="true"></i>
+                    <input type="email" name="email" placeholder="Email" id="" required>
+                    <i class="fa fa-envelope" aria-hidden="true"></i>
                 </div>
                 <div class="password">
-                    <input type="url" name="imgUrl" placeholder="Upload Image" id="imageUrl" required>
-                    <i class="fa fa-picture-o" aria-hidden="true"></i>
+                    <input type="password" name="password" placeholder="Choose Your Password" id="" required>
+                    <i class="fa fa-key" aria-hidden="true"></i>
                 </div>
+
                 <div class="password">
-                    <img src="" alt="image">
-                    <!-- <i class="fa fa-key" aria-hidden="true"></i> -->
-                </div>
-                <div class="password">
-                    <textarea name="blogText" required></textarea>
+                    <input type="url" name="pic" placeholder="Upload Your Image" id="" required>
+                    <i class="fa fa-upload" aria-hidden="true"></i>
                 </div>
                 <div class="submitButton">
-                    <button>Upload</button>
-                    <!-- <i class="fa fa-paper-plane" aria-hidden="true"></i> -->
+                    <button>Sign Up</button>
+                    <i class="fa fa-paper-plane" aria-hidden="true"></i>
                 </div>
             </form>
+            <div class="text">
+                <a href="/login">
+                    <h2>Registered Already ?</h2>
+                </a>
+            </div>
         </div>
         <%if(error === "Error"){%>
         <div class="errorTxt">
-            <h2><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Error Uploading😢!</h2>
+            <h2><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Email already registered🤷‍♂️ !</h2>
         </div>
         <%}%>
     </div>
 </body>
-<script>
-    const image = document.images[0];
-    const image_url = document.getElementById("imageUrl");
-
-    image_url.addEventListener("input", () => {
-        image.style.display = "block";
-        image.src = image_url.value;
-
-        if (image_url.value === "")
-            image.style.display = "none";
-    })
-</script>
 
 </html>
