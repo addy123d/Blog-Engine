@@ -162,9 +162,11 @@ app.get("/blogs/:email", redirectLogin, (request, response) => {
 
 })
 
-app.get("/blogs/fullblog/:title", redirectLogin, (request, response) => {
+app.get("/blogs/fullblog/:title&:email", redirectLogin, (request, response) => {
     const title = request.params.title;
-    const email = request.session.Email;
+    const email = request.params.email;
+    console.log("Title :", title);
+    console.log("Email :", email);
 
     // BEFORE :
     // // Collect index of a blog in allBlogs array with the help of email
@@ -437,7 +439,9 @@ app.post("/loginDetails", (request, response) => {
 
 // Get Blog form - We need blog title , one picture, blog text
 app.get("/blogForm", redirectLogin, (request, response) => {
-    response.render("uploadblog");
+    response.render("uploadblog", {
+        error: ""
+    });
 
 })
 

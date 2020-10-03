@@ -18,7 +18,7 @@
         position: fixed;
         width: 100%;
         height: 100vh;
-        background: #0388f4;
+        background: #1c1d1e;
         z-index: 999999;
     }
 
@@ -126,7 +126,7 @@
     </nav>
 
     <%for(var i=0; i<= users.length-1; i++){%>
-            <div class="card" style="width: 18rem; margin: 5%;display: inline-block;">
+            <div class="card" style="width: 21rem; margin: 5%;display: inline-block;">
                 <img class="card-img-top" src="<%=users[i].profilepic%>" alt="Card image cap">
                 <div class="card-body">
                     <p style="text-align: center;font-weight: bolder;" class="card-text"><%=users[i].email%></p>
@@ -160,7 +160,7 @@
     window.addEventListener("load", () => {
         setTimeout(() => {
             loading.style.display = "none";
-        }, 1500)
+        }, 500)
     })
 </script>
 </html>
